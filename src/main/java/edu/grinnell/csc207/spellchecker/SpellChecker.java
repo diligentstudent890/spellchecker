@@ -3,6 +3,7 @@ package edu.grinnell.csc207.spellchecker;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,22 +28,106 @@ public class SpellChecker {
     /** A Node of the SpellChecker structure. */
     private class Node {
         // TODO: implement me!
+        private char cur;
+        private List<Node> next;
+        public Node(char cur){
+            this.cur = cur;
+            this.next = new ArrayList<>();
+        }
+
+        public boolean nextExist(char chr){
+            for (int iter = 0; iter < next.size(); iter++){
+                if (next.get(iter).cur == chr){
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public Node next (char chr) {
+            for (int iter = 0; iter < next.size(); iter++){
+                if (next.get(iter).cur == chr){
+                    return next.get(iter);
+                }
+            }
+            return null;
+        }
+
+    }
+
+    public boolean chrExist(char chr, List<Node> nodes){
+        for (int iter = 0; iter < nodes.size(); iter++){
+            if (nodes.get(iter).cur == chr){
+                return true;
+            }
+        }
+        return false;
     }
 
     /** The root of the SpellChecker */
-    private Node root;
+    private List<Node> root;
 
     public SpellChecker(List<String> dict) {
         // TODO: implement me!
+        this.root = new ArrayList<>();
+        for(int iter = 0; iter < dict.size(); iter++) {
+            add(dict.get(iter));
+        }
     }
 
     public void add(String word) {
-        // TODO: implement me!
+        char[] charword = word.toCharArray();
+        if (charword.length == 0){
+            return;
+        }
+        Node curNode = null;
+        if (chrExist(charword[0], root)){
+            curNode = new Node(charword[0]);
+            root.add(curNode);
+        } else {
+            for(int iter = 0; iter < root.size(); iter++){
+                if (root.get(iter).cur == charword[0]){
+                    curNode = root.get(iter);
+                }
+            }
+        }
+        
+        for(int iter = 1; iter < charword.length; iter++){
+            if (iter + 1 < charword.length) {
+                if (curNode.nextExist(charword[iter + 1])) {
+                    curNode = curNode.next(charword[iter + 1]);
+                } else {
+                    curNode.next.add(new Node(charword[iter + 1]));
+                    curNode = curNode.next(charword[iter + 1]);
+                }
+            }
+        }
     }
 
     public boolean isWord(String word) {
         // TODO: implement me!
-        return false;
+        char[] charword = word.toCharArray();
+        
+        Node curNode = null;
+        if (chrExist(charword[0], root)){
+            return false;
+        } else {
+            for(int iter = 0; iter < root.size(); iter++){
+                if (root.get(iter).cur == charword[0]){
+                    curNode = root.get(iter);
+                }
+            }
+        }
+
+        for(int iter = 1; iter < charword.length - 1; iter++) {
+            if (curNode.nextExist(charword[iter])) {
+                curNode = curNode.next(charword[iter]);
+            }
+            else {
+                return false;
+            }
+        }
+        return true;
     }
 
     public List<String> getOneCharCompletions(String word) {
